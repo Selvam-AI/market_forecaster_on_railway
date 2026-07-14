@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Geopolitical Market Forecaster</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='dashboard.css') ~ '?v=20260714-1' }}">
+  </head>
+  <body>
+    <main class="dashboard-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Geopolitical Market Forecaster v2.0</p>
+          <h1>See the market forces behind the share price.</h1>
+          <p class="prototype-note">Educational Prototype Only. Always verify company fundamentals before trading.</p>
+        </div>
+        <div class="status-panel" aria-live="polite">
+          <span>Analysis: {{ analysis_provider|replace('_', ' ')|title }}</span>
+          <strong id="connection-status">Connecting</strong>
+        </div>
+      </header>
+
+      <nav class="entity-tabs" role="tablist" aria-label="Select a company">
+        {% for decision in sector_decisions %}
+        <button
+          class="entity-tab{% if loop.first %} active{% endif %}"
+          id="tab-{{ decision.theme }}"
+          type="button"
+          role="tab"
+          aria-selected="{{ 'true' if loop.first else 'false' }}"
+          aria-controls="panel-{{ decision.theme }}"
+          tabindex="{{ '0' if loop.first else '-1' }}"
+          data-tab-target="{{ decision.theme }}"
+        >
+          <span>{{ decision.company_name }} ({{ decision.ticker }})</span>
+          <small>{{ decision.sector_label }}</small>
+        </button>
+        {% endfor %}
+      </nav>
+
+      <div id="decision-board">
+        {% for decision in sector_decisions %}
+        <article
+          class="entity-panel{% if loop.first %} active{% endif %}"
+          id="panel-{{ decision.theme }}"
+          role="tabpanel"
+          aria-labelledby="tab-{{ decision.theme }}"
+          data-panel="{{ decision.theme }}"
+          {% if not loop.first %}hidden{% endif %}
+        >
+          <div class="hero-grid">
+            <section class="data-card wind-card">
+              <p class="section-label">Market Wind Direction</p>
+              <div class="wind-content">
+                <strong class="wind-badge wind-{{ decision.wind_direction|lower }}">{{ decision.wind_direction }}</strong>
+                <p>{{ decision.wind_summary }}</p>
+              </div>
+            </section>
+
+            <section class="data-card market-card">
+              <p class="section-label">Real Market Data <span>(SGX)</span></p>
+              <div class="market-content">
+                <div>
+                  <strong class="market-price">{{ decision.market_price }}</strong>
+                  <span class="day-change {{ decision.change_direction }}">{{ decision.day_change }} Today</span>
+                </div>
+                <dl class="ticker-details">
+                  <div><dt>Ticker</dt><dd>{{ decision.ticker }}</dd></div>
+                  <div><dt>Company</dt><dd>{{ decision.company_name }}</dd></div>
+                </dl>
+              </div>
+            </section>
+          </div>
+
+          <section class="data-card score-card">
+            <div class="score-heading">
+              <div>
+                <p class="section-label">AI Logic Score</p>
+                <strong>{{ decision.logic_score }}%</strong>
+              </div>
+              <span>{{ decision.logic_label }}</span>
+            </div>
+            <div class="score-track" role="progressbar" aria-label="AI logic score" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ decision.logic_score }}">
+              <div class="score-fill score-{{ decision.theme }}" style="--score: {{ decision.logic_score }}%"></div>
+            </div>
+          </section>
+
+          <div class="context-grid">
+            <section class="data-card explanation-card">
+              <p class="section-label">Simple Explanation</p>
+              <p class="explanation-copy">{{ decision.simple_explanation }}</p>
+            </section>
+
+            <section class="data-card news-card">
+              <div class="news-heading">
+                <p class="section-label">Live Global News Feed</p>
+                <span>{{ decision.evidence|length }} matching stories</span>
+              </div>
+              <div class="news-list">
+                {% for item in decision.evidence %}
+                <a class="news-item" href="{{ item.url }}" target="_blank" rel="noreferrer">
+                  <div class="news-meta">
+                    <span class="news-source">{{ item.source }}</span>
+                    {% if item.published_at %}<time datetime="{{ item.published_at }}">{{ item.published_at[:10] }}</time>{% endif %}
+                  </div>
+                  <strong>{{ item.title }}</strong>
+                  <span class="topic-tag">{{ item.topic }}</span>
+                </a>
+                {% else %}
+                <div class="empty-news">
+                  <strong>No matching stories yet</strong>
+                  <p>Run a news refresh to populate this company’s evidence feed.</p>
+                </div>
+                {% endfor %}
+              </div>
+            </section>
+          </div>
+
+          <p class="panel-disclaimer">{{ decision.disclaimer }} Educational signal only—not financial advice.</p>
+        </article>
+        {% endfor %}
+      </div>
+    </main>
+
+    <script src="{{ url_for('static', path='dashboard.js') ~ '?v=20260714-1' }}"></script>
+  </body>
+</html>
