@@ -43,19 +43,14 @@ async def test_dashboard_api_returns_summary_and_signals(tmp_path, monkeypatch):
 
 def test_dashboard_template_and_styles_exist():
     package_dir = Path(__file__).resolve().parents[1] / "src" / "geopolitical_market_forecaster"
+    template_text = (package_dir / "templates" / "dashboard.html").read_text()
 
-    assert 'role="tablist"' in (
-        package_dir / "templates" / "dashboard.html"
-    ).read_text()
-    assert "Historical Performance & Learning" not in (
-        package_dir / "templates" / "dashboard.html"
-    ).read_text()
-    assert "System Governance" not in (
-        package_dir / "templates" / "dashboard.html"
-    ).read_text()
-    assert "Live Global News Feed" in (
-        package_dir / "templates" / "dashboard.html"
-    ).read_text()
+    assert 'role="tablist"' in template_text
+    assert "Historical Performance & Learning" not in template_text
+    assert "System Governance" not in template_text
+    assert "Live Global News Feed" in template_text
+    assert "url_for('static', path='dashboard.css').path" in template_text
+    assert "url_for('static', path='dashboard.js').path" in template_text
     assert ".entity-tabs" in (package_dir / "static" / "dashboard.css").read_text()
     assert ".wind-badge" in (
         package_dir / "static" / "dashboard.css"
