@@ -50,10 +50,13 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Geopolitical Market Forecaster", lifespan=lifespan)
 PACKAGE_DIR = Path(__file__).resolve().parent
-templates = Jinja2Templates(directory=PACKAGE_DIR / "templates")
+TEMPLATE_DIR = PACKAGE_DIR / "templates"
+STATIC_DIR = PACKAGE_DIR / "static"
+
+templates = Jinja2Templates(directory=str(TEMPLATE_DIR))
 app.mount(
     "/static",
-    StaticFiles(directory=PACKAGE_DIR / "static"),
+    StaticFiles(directory=str(STATIC_DIR), check_dir=True),
     name="static",
 )
 

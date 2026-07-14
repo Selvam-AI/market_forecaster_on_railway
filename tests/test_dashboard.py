@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from geopolitical_market_forecaster.config import get_settings
-from geopolitical_market_forecaster.main import dashboard_data
+from geopolitical_market_forecaster.main import app, dashboard_data
 from geopolitical_market_forecaster.models import NewsItem
 from geopolitical_market_forecaster.storage import (
     initialize_database,
@@ -61,3 +61,16 @@ def test_dashboard_template_and_styles_exist():
         package_dir / "static" / "dashboard.css"
     ).read_text()
     assert ".score-track" in (package_dir / "static" / "dashboard.css").read_text()
+
+
+def test_static_asset_mount_resolves_css_and_javascript():
+    static_route = next(route for route in app.routes if route.name == "static")
+
+    css_path, css_stat = static_route.app.lookup_path("dashboard.css")
+    js_path, js_stat = static_route.app.lookup_path("dashboard.js")
+
+    assert static_route.path == "/static"
+    assert Path(css_path).name == "dashboard.css"
+    assert css_stat is not None
+    assert Path(js_path).name == "dashboard.js"
+    assert js_stat is not None

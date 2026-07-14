@@ -60,10 +60,23 @@ class Settings(BaseModel):
 @lru_cache
 def get_settings() -> Settings:
     database_backend = os.getenv("DATABASE_BACKEND", "sqlite").lower()
+    if database_backend not in {"sqlite", "postgres"}:
+        raise ValueError("DATABASE_BACKEND must be either 'sqlite' or 'postgres'.")
+
     if database_backend == "postgres":
-        database_url = os.getenv("DATABASE_PUBLIC_URL") or os.getenv("DATABASE_URL") or "sqlite:///data/geopolitical_market_forecaster.db"
+        database_url = os.getenv("DATABASE_URL") or os.getenv("DATABASE_PUBLIC_URL")
+        if not database_url or not database_url.startswith(("postgresql://", "postgres://")):
+            raise ValueError(
+                "DATABASE_BACKEND=postgres requires DATABASE_URL or "
+                "DATABASE_PUBLIC_URL to contain a PostgreSQL URL."
+            )
     else:
-        database_url = "sqlite:///data/geopolitical_market_forecaster.db"
+        configured_url = os.getenv("DATABASE_URL", "")
+        database_url = (
+            configured_url
+            if configured_url.startswith("sqlite:///")
+            else "sqlite:///data/geopolitical_market_forecaster.db"
+        )
 
     return Settings(
         app_env=os.getenv("APP_ENV", "local"),

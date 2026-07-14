@@ -32,10 +32,10 @@ This project is designed for learning, evaluation, and demonstration purposes on
 - Added an HTML-rendered sector decision dashboard for example Offshore & Marine and Airline exposure decisions.
 - Implemented news ingestion from Guardian, NewsAPI, and RSS source options.
 - Added a plain-Python workflow pipeline with four named components: Scraper, Economic Analyst, Predictor, and Governor.
-- Persisted news, insights, forecasts, governance reviews, and audit events in SQLite.
+- Persisted news, insights, forecasts, governance reviews, and audit events in SQLite locally and PostgreSQL on Railway.
 - Added realtime dashboard refresh via WebSockets.
 - Added a governance report and regression tests.
-- Current verification: `21 passed`.
+- Current verification: `34 passed`.
 
 ---
 
@@ -80,7 +80,8 @@ What the demo is showing:
 - Python 3.12.
 - FastAPI backend application.
 - Uvicorn ASGI server.
-- SQLite for local persistence.
+- SQLite for local persistence and PostgreSQL for Railway persistence.
+- psycopg for PostgreSQL connectivity and migration.
 - Pydantic models for structured agent data.
 - httpx and feedparser for API/RSS ingestion.
 - pytest for regression tests.
@@ -173,7 +174,9 @@ NEWS_API_KEY=your_key_here
 GUARDIAN_API_KEY=your_key_here
 CURRENTS_API_KEY=
 APP_ENV=local
+DATABASE_BACKEND=sqlite
 DATABASE_URL=sqlite:///data/geopolitical_market_forecaster.db
+DATABASE_PUBLIC_URL=
 DEFAULT_REGION="Middle East"
 DEFAULT_NEWS_QUERY="Middle East geopolitics oil shipping markets"
 QUERY_ENERGY='("Brent crude" OR "WTI" OR "energy security") AND (supply OR sanction OR pipeline OR "production cut" OR "OPEC")'
@@ -242,6 +245,12 @@ Health check:
 curl http://127.0.0.1:8000/health
 ```
 
+Static asset check:
+
+```bash
+curl -I http://127.0.0.1:8000/static/dashboard.css
+```
+
 Dashboard JSON:
 
 ```text
@@ -254,12 +263,42 @@ The visible dashboard is centered on two educational company/sector decision car
 News Event -> Scraper Agent -> Economic Analyst Agent -> Predictor Agent -> Governor Agent -> Sector Decision
 ```
 
-The raw table counts for news, insights, forecasts, reviews, and audit events remain available through `/api/dashboard`, `gmf show-status`, and the SQLite database, but they are not shown as top-level dashboard boxes.
+The raw table counts for news, insights, forecasts, reviews, and audit events remain available through `/api/dashboard`, `gmf show-status`, and the configured database, but they are not shown as top-level dashboard boxes.
 
 Realtime WebSocket:
 
 ```text
 ws://127.0.0.1:8000/ws/alerts
+```
+
+### Railway Deployment
+
+This repository deploys from its root directory. Railway settings:
+
+```text
+Build Command: pip install .
+Start Command: uvicorn geopolitical_market_forecaster.main:app --host 0.0.0.0 --port $PORT
+Healthcheck Path: /health
+```
+
+Railway application variables:
+
+```text
+APP_ENV=production
+DATABASE_BACKEND=postgres
+DATABASE_URL=${{Postgres.DATABASE_URL}}
+```
+
+Use Railway's private `DATABASE_URL` for the deployed application. `DATABASE_PUBLIC_URL` is intended for migration or local administrative access outside Railway. Do not commit either URL or any API key.
+
+The application creates or upgrades its five PostgreSQL tables during startup. The upgrade repairs the text-only columns created by the original SQLite migration, restores ID sequences and primary keys, and adds URL deduplication for news records. It is safe to run again on later deployments. Create a Railway PostgreSQL backup before the first deployment containing this schema upgrade.
+
+To migrate a local SQLite database from outside Railway:
+
+```bash
+python -m geopolitical_market_forecaster.migration \
+  --sqlite data/geopolitical_market_forecaster.db \
+  --postgres-url "$DATABASE_PUBLIC_URL"
 ```
 
 ### Run The Pipeline
@@ -353,7 +392,7 @@ Key folders:
 - `tests/`: pytest regression tests.
 - `docs/`: evaluator guide, architecture notes, implementation plan, prompt log, governance report, tooling notes, and concept documents.
 - `scripts/`: small local automation helpers.
-- `data/`: local SQLite runtime database.
+- `data/`: local SQLite runtime database; Railway uses PostgreSQL instead.
 
 `scripts/` is useful but intentionally small because most automation is exposed through the `gmf` CLI. `LICENSE` is included because the programme deliverables suggest it; it currently uses a conservative all-rights-reserved notice rather than an open-source license.
 
@@ -363,7 +402,7 @@ Key folders:
 
 The Governor Agent is currently a basic post-forecast review layer. It checks whether forecasts include evidence, flags high-confidence forecasts for manual review, preserves uncertainty notes, and keeps source URLs attached for traceability.
 
-Governance output is persisted in SQLite tables such as `governance_reviews` and `audit_events` and summarized in `docs/GOVERNANCE_REPORT.md`. It does not yet prevent the Analyst Agent from using weak or unverified source material before analysis. The current dashboard keeps the visible experience focused on the decision signal, agent workflow, and source evidence.
+Governance output is persisted in tables such as `governance_reviews` and `audit_events` in SQLite or PostgreSQL and summarized in `docs/GOVERNANCE_REPORT.md`. It does not yet prevent the Analyst Agent from using weak or unverified source material before analysis. The current dashboard keeps the visible experience focused on the decision signal, agent workflow, and source evidence.
 
 Readable governance report:
 
