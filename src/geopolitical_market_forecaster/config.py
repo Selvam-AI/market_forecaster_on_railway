@@ -17,6 +17,7 @@ class Settings(BaseModel):
     news_api_key: str | None = None
     guardian_api_key: str | None = None
     currents_api_key: str | None = None
+    database_backend: str = "sqlite"
     database_url: str = "sqlite:///data/geopolitical_market_forecaster.db"
     default_region: str = "Middle East"
     default_news_query: str = "Middle East geopolitics oil shipping markets"
@@ -58,6 +59,12 @@ class Settings(BaseModel):
 
 @lru_cache
 def get_settings() -> Settings:
+    database_backend = os.getenv("DATABASE_BACKEND", "sqlite").lower()
+    if database_backend == "postgres":
+        database_url = os.getenv("DATABASE_PUBLIC_URL") or os.getenv("DATABASE_URL") or "sqlite:///data/geopolitical_market_forecaster.db"
+    else:
+        database_url = "sqlite:///data/geopolitical_market_forecaster.db"
+
     return Settings(
         app_env=os.getenv("APP_ENV", "local"),
         gemini_api_key=os.getenv("GEMINI_API_KEY") or None,
@@ -65,10 +72,8 @@ def get_settings() -> Settings:
         news_api_key=os.getenv("NEWS_API_KEY") or None,
         guardian_api_key=os.getenv("GUARDIAN_API_KEY") or None,
         currents_api_key=os.getenv("CURRENTS_API_KEY") or None,
-        database_url=os.getenv(
-            "DATABASE_URL",
-            "sqlite:///data/geopolitical_market_forecaster.db",
-        ),
+        database_backend=database_backend,
+        database_url=database_url,
         default_region=os.getenv("DEFAULT_REGION", "Middle East"),
         default_news_query=os.getenv(
             "DEFAULT_NEWS_QUERY",

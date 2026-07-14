@@ -3,6 +3,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable
 
+import psycopg
+
 from geopolitical_market_forecaster.models import (
     EconomicInsight,
     GovernanceReview,
@@ -18,6 +20,80 @@ def database_path(database_url: str) -> Path:
 
 
 def initialize_database(database_url: str) -> None:
+    if database_url.startswith("postgresql://") or database_url.startswith("postgres://"):
+        with psycopg.connect(database_url, sslmode="require") as connection:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS audit_events (
+                        id SERIAL PRIMARY KEY,
+                        event_type TEXT NOT NULL,
+                        payload TEXT NOT NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                    """
+                )
+                cursor.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS news_items (
+                        id SERIAL PRIMARY KEY,
+                        title TEXT NOT NULL,
+                        source TEXT NOT NULL,
+                        url TEXT NOT NULL UNIQUE,
+                        published_at TEXT,
+                        region TEXT NOT NULL,
+                        summary TEXT,
+                        raw_text TEXT,
+                        collected_at TEXT NOT NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                    """
+                )
+                cursor.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS economic_insights (
+                        id SERIAL PRIMARY KEY,
+                        news_url TEXT NOT NULL,
+                        signal_tier TEXT NOT NULL,
+                        themes TEXT NOT NULL,
+                        affected_markets TEXT NOT NULL,
+                        rationale TEXT NOT NULL,
+                        payload TEXT NOT NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                    """
+                )
+                cursor.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS market_forecasts (
+                        id SERIAL PRIMARY KEY,
+                        news_url TEXT NOT NULL,
+                        forecast TEXT NOT NULL,
+                        time_horizon TEXT NOT NULL,
+                        confidence TEXT NOT NULL,
+                        evidence TEXT NOT NULL,
+                        uncertainty TEXT NOT NULL,
+                        payload TEXT NOT NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                    """
+                )
+                cursor.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS governance_reviews (
+                        id SERIAL PRIMARY KEY,
+                        news_url TEXT NOT NULL,
+                        approved INTEGER NOT NULL,
+                        flags TEXT NOT NULL,
+                        audit_notes TEXT NOT NULL,
+                        payload TEXT NOT NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                    """
+                )
+            connection.commit()
+        return
+
     path = database_path(database_url)
     path.parent.mkdir(parents=True, exist_ok=True)
 
