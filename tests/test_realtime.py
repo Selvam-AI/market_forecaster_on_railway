@@ -2,16 +2,12 @@ import asyncio
 
 import pytest
 
+from geopolitical_market_forecaster import realtime
 from geopolitical_market_forecaster.config import Settings
-from geopolitical_market_forecaster.models import NewsItem
 from geopolitical_market_forecaster.realtime import (
     ConnectionManager,
     dashboard_payload,
     signal_severity,
-)
-from geopolitical_market_forecaster.storage import (
-    initialize_database,
-    save_news_items,
 )
 
 
@@ -42,20 +38,31 @@ def test_signal_severity_uses_tier_confidence_and_flags():
     assert signal_severity({"signal_tier": "FYI", "approved": True, "flags": []}) == "low"
 
 
-def test_dashboard_payload_includes_alerts(tmp_path):
-    database_url = f"sqlite:///{tmp_path / 'realtime.db'}"
-    settings = Settings(database_url=database_url)
-    initialize_database(database_url)
-    save_news_items(
-        database_url,
-        [
-            NewsItem(
-                title="Oil shipping risk",
-                source="Test",
-                url="https://example.com/realtime",
-                summary="Energy and shipping tension.",
-            )
-        ],
+def test_dashboard_payload_includes_alerts(monkeypatch):
+    settings = Settings(
+        database_url=(
+            "postgresql://railway-user:pass@"
+            "postgres.railway.internal:5432/railway"
+        )
+    )
+    signals = [
+        {
+            "title": "Oil shipping risk",
+            "source": "Test",
+            "url": "https://example.com/realtime",
+            "signal_tier": "Actionable",
+            "confidence": "Medium",
+            "approved": True,
+            "flags": [],
+            "themes": ["energy", "shipping"],
+            "affected_markets": ["offshore", "aviation"],
+        }
+    ]
+    monkeypatch.setattr(realtime, "list_dashboard_signals", lambda database_url: signals)
+    monkeypatch.setattr(
+        realtime,
+        "dashboard_summary",
+        lambda database_url: {"news_items": 1},
     )
 
     payload = dashboard_payload(settings, "snapshot")

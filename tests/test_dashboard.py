@@ -2,36 +2,35 @@ from pathlib import Path
 
 import pytest
 
+from geopolitical_market_forecaster import main
 from geopolitical_market_forecaster.config import get_settings
-from geopolitical_market_forecaster.main import app, dashboard_data
-from geopolitical_market_forecaster.models import NewsItem
-from geopolitical_market_forecaster.storage import (
-    initialize_database,
-    save_news_items,
-)
+from geopolitical_market_forecaster.main import app
 
 
 @pytest.mark.asyncio
-async def test_dashboard_api_returns_summary_and_signals(tmp_path, monkeypatch):
-    database_url = f"sqlite:///{tmp_path / 'dashboard.db'}"
-    monkeypatch.setenv("DATABASE_URL", database_url)
+async def test_dashboard_api_returns_summary_and_signals(monkeypatch):
+    monkeypatch.setenv(
+        "DATABASE_URL",
+        "postgresql://railway-user:pass@postgres.railway.internal:5432/railway",
+    )
     get_settings.cache_clear()
-
-    initialize_database(database_url)
-    save_news_items(
-        database_url,
-        [
-            NewsItem(
-                title="Oil supply signal",
-                source="Test",
-                url="https://example.com/dashboard-signal",
-                summary="Energy and shipping signal.",
-            )
-        ],
+    monkeypatch.setattr(main, "initialize_database", lambda database_url: None)
+    monkeypatch.setattr(
+        main,
+        "dashboard_payload",
+        lambda settings, event: {
+            "event": event,
+            "summary": {"news_items": 1},
+            "signals": [{"title": "Oil supply signal"}],
+            "sector_decisions": [
+                {"category": "Offshore & Marine Exposure"},
+                {"category": "Airline Exposure"},
+            ],
+        },
     )
 
     try:
-        payload = await dashboard_data()
+        payload = await main.dashboard_data()
     finally:
         get_settings.cache_clear()
 

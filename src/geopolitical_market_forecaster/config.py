@@ -1,24 +1,17 @@
 import os
 from functools import lru_cache
-from pathlib import Path
 
-from dotenv import load_dotenv
 from pydantic import BaseModel
 
 
-ROOT_DIR = Path(__file__).resolve().parents[2]
-load_dotenv(ROOT_DIR / ".env")
-
-
 class Settings(BaseModel):
-    app_env: str = "local"
+    app_env: str = "production"
     gemini_api_key: str | None = None
     openai_api_key: str | None = None
     news_api_key: str | None = None
     guardian_api_key: str | None = None
     currents_api_key: str | None = None
-    database_backend: str = "sqlite"
-    database_url: str = "sqlite:///data/geopolitical_market_forecaster.db"
+    database_url: str = ""
     default_region: str = "Middle East"
     default_news_query: str = "Middle East geopolitics oil shipping markets"
     query_energy: str | None = None
@@ -31,7 +24,7 @@ class Settings(BaseModel):
     ollama_enabled: bool = False
     ollama_base_url: str = "http://127.0.0.1:11434"
     ollama_model: str = "llama3.1"
-    error_log_path: str = str(ROOT_DIR / "ERROR_LOG.txt")
+    error_log_path: str = "/tmp/geopolitical_market_forecaster_errors.log"
     enable_background_polling: bool = False
     alert_poll_seconds: int = 300
 
@@ -59,33 +52,19 @@ class Settings(BaseModel):
 
 @lru_cache
 def get_settings() -> Settings:
-    database_backend = os.getenv("DATABASE_BACKEND", "sqlite").lower()
-    if database_backend not in {"sqlite", "postgres"}:
-        raise ValueError("DATABASE_BACKEND must be either 'sqlite' or 'postgres'.")
-
-    if database_backend == "postgres":
-        database_url = os.getenv("DATABASE_URL") or os.getenv("DATABASE_PUBLIC_URL")
-        if not database_url or not database_url.startswith(("postgresql://", "postgres://")):
-            raise ValueError(
-                "DATABASE_BACKEND=postgres requires DATABASE_URL or "
-                "DATABASE_PUBLIC_URL to contain a PostgreSQL URL."
-            )
-    else:
-        configured_url = os.getenv("DATABASE_URL", "")
-        database_url = (
-            configured_url
-            if configured_url.startswith("sqlite:///")
-            else "sqlite:///data/geopolitical_market_forecaster.db"
+    database_url = os.getenv("DATABASE_URL", "")
+    if not database_url.startswith(("postgresql://", "postgres://")):
+        raise ValueError(
+            "DATABASE_URL must contain the Railway PostgreSQL connection URL."
         )
 
     return Settings(
-        app_env=os.getenv("APP_ENV", "local"),
+        app_env=os.getenv("APP_ENV", "production"),
         gemini_api_key=os.getenv("GEMINI_API_KEY") or None,
         openai_api_key=os.getenv("OPENAI_API_KEY") or None,
         news_api_key=os.getenv("NEWS_API_KEY") or None,
         guardian_api_key=os.getenv("GUARDIAN_API_KEY") or None,
         currents_api_key=os.getenv("CURRENTS_API_KEY") or None,
-        database_backend=database_backend,
         database_url=database_url,
         default_region=os.getenv("DEFAULT_REGION", "Middle East"),
         default_news_query=os.getenv(
@@ -103,7 +82,10 @@ def get_settings() -> Settings:
         in {"1", "true", "yes", "on"},
         ollama_base_url=os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434"),
         ollama_model=os.getenv("OLLAMA_MODEL", "llama3.1"),
-        error_log_path=os.getenv("ERROR_LOG_PATH", str(ROOT_DIR / "ERROR_LOG.txt")),
+        error_log_path=os.getenv(
+            "ERROR_LOG_PATH",
+            "/tmp/geopolitical_market_forecaster_errors.log",
+        ),
         enable_background_polling=os.getenv(
             "ENABLE_BACKGROUND_POLLING",
             "false",

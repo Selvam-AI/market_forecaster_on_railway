@@ -1,6 +1,4 @@
-import sqlite3
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Iterable
 
 import psycopg
@@ -25,172 +23,92 @@ POSTGRES_TABLES = (
 _INITIALIZED_DATABASE_URLS: set[str] = set()
 
 
-def is_postgres(database_url: str) -> bool:
-    return database_url.startswith(POSTGRES_PREFIXES)
-
-
-def database_path(database_url: str) -> Path:
-    if not database_url.startswith("sqlite:///"):
-        raise ValueError("Expected a sqlite:/// or postgresql:// database URL.")
-    return Path(database_url.removeprefix("sqlite:///"))
+def validate_database_url(database_url: str) -> None:
+    if not database_url.startswith(POSTGRES_PREFIXES):
+        raise ValueError("DATABASE_URL must contain a PostgreSQL URL.")
 
 
 def initialize_database(database_url: str) -> None:
+    validate_database_url(database_url)
     if database_url in _INITIALIZED_DATABASE_URLS:
         return
 
-    if is_postgres(database_url):
-        with psycopg.connect(database_url) as connection:
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    """
-                    CREATE TABLE IF NOT EXISTS audit_events (
-                        id SERIAL PRIMARY KEY,
-                        event_type TEXT NOT NULL,
-                        payload TEXT NOT NULL,
-                        created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-                    )
-                    """
+    with psycopg.connect(database_url) as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS audit_events (
+                    id SERIAL PRIMARY KEY,
+                    event_type TEXT NOT NULL,
+                    payload TEXT NOT NULL,
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
                 )
-                cursor.execute(
-                    """
-                    CREATE TABLE IF NOT EXISTS news_items (
-                        id SERIAL PRIMARY KEY,
-                        title TEXT NOT NULL,
-                        source TEXT NOT NULL,
-                        url TEXT NOT NULL UNIQUE,
-                        published_at TEXT,
-                        region TEXT NOT NULL,
-                        summary TEXT,
-                        raw_text TEXT,
-                        collected_at TEXT NOT NULL,
-                        created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-                    )
-                    """
+                """
+            )
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS news_items (
+                    id SERIAL PRIMARY KEY,
+                    title TEXT NOT NULL,
+                    source TEXT NOT NULL,
+                    url TEXT NOT NULL UNIQUE,
+                    published_at TEXT,
+                    region TEXT NOT NULL,
+                    summary TEXT,
+                    raw_text TEXT,
+                    collected_at TEXT NOT NULL,
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
                 )
-                cursor.execute(
-                    """
-                    CREATE TABLE IF NOT EXISTS economic_insights (
-                        id SERIAL PRIMARY KEY,
-                        news_url TEXT NOT NULL,
-                        signal_tier TEXT NOT NULL,
-                        themes TEXT NOT NULL,
-                        affected_markets TEXT NOT NULL,
-                        rationale TEXT NOT NULL,
-                        payload TEXT NOT NULL,
-                        created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-                    )
-                    """
+                """
+            )
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS economic_insights (
+                    id SERIAL PRIMARY KEY,
+                    news_url TEXT NOT NULL,
+                    signal_tier TEXT NOT NULL,
+                    themes TEXT NOT NULL,
+                    affected_markets TEXT NOT NULL,
+                    rationale TEXT NOT NULL,
+                    payload TEXT NOT NULL,
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
                 )
-                cursor.execute(
-                    """
-                    CREATE TABLE IF NOT EXISTS market_forecasts (
-                        id SERIAL PRIMARY KEY,
-                        news_url TEXT NOT NULL,
-                        forecast TEXT NOT NULL,
-                        time_horizon TEXT NOT NULL,
-                        confidence TEXT NOT NULL,
-                        evidence TEXT NOT NULL,
-                        uncertainty TEXT NOT NULL,
-                        payload TEXT NOT NULL,
-                        created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-                    )
-                    """
+                """
+            )
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS market_forecasts (
+                    id SERIAL PRIMARY KEY,
+                    news_url TEXT NOT NULL,
+                    forecast TEXT NOT NULL,
+                    time_horizon TEXT NOT NULL,
+                    confidence TEXT NOT NULL,
+                    evidence TEXT NOT NULL,
+                    uncertainty TEXT NOT NULL,
+                    payload TEXT NOT NULL,
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
                 )
-                cursor.execute(
-                    """
-                    CREATE TABLE IF NOT EXISTS governance_reviews (
-                        id SERIAL PRIMARY KEY,
-                        news_url TEXT NOT NULL,
-                        approved INTEGER NOT NULL,
-                        flags TEXT NOT NULL,
-                        audit_notes TEXT NOT NULL,
-                        payload TEXT NOT NULL,
-                        created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-                    )
-                    """
+                """
+            )
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS governance_reviews (
+                    id SERIAL PRIMARY KEY,
+                    news_url TEXT NOT NULL,
+                    approved INTEGER NOT NULL,
+                    flags TEXT NOT NULL,
+                    audit_notes TEXT NOT NULL,
+                    payload TEXT NOT NULL,
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
                 )
-                _upgrade_postgres_schema(cursor)
-        _INITIALIZED_DATABASE_URLS.add(database_url)
-        return
-
-    path = database_path(database_url)
-    path.parent.mkdir(parents=True, exist_ok=True)
-
-    with sqlite3.connect(path) as connection:
-        connection.execute(
-            """
-            CREATE TABLE IF NOT EXISTS audit_events (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                event_type TEXT NOT NULL,
-                payload TEXT NOT NULL,
-                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                """
             )
-            """
-        )
-        connection.execute(
-            """
-            CREATE TABLE IF NOT EXISTS news_items (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                title TEXT NOT NULL,
-                source TEXT NOT NULL,
-                url TEXT NOT NULL UNIQUE,
-                published_at TEXT,
-                region TEXT NOT NULL,
-                summary TEXT,
-                raw_text TEXT,
-                collected_at TEXT NOT NULL,
-                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-            )
-            """
-        )
-        connection.execute(
-            """
-            CREATE TABLE IF NOT EXISTS economic_insights (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                news_url TEXT NOT NULL,
-                signal_tier TEXT NOT NULL,
-                themes TEXT NOT NULL,
-                affected_markets TEXT NOT NULL,
-                rationale TEXT NOT NULL,
-                payload TEXT NOT NULL,
-                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-            )
-            """
-        )
-        connection.execute(
-            """
-            CREATE TABLE IF NOT EXISTS market_forecasts (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                news_url TEXT NOT NULL,
-                forecast TEXT NOT NULL,
-                time_horizon TEXT NOT NULL,
-                confidence TEXT NOT NULL,
-                evidence TEXT NOT NULL,
-                uncertainty TEXT NOT NULL,
-                payload TEXT NOT NULL,
-                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-            )
-            """
-        )
-        connection.execute(
-            """
-            CREATE TABLE IF NOT EXISTS governance_reviews (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                news_url TEXT NOT NULL,
-                approved INTEGER NOT NULL,
-                flags TEXT NOT NULL,
-                audit_notes TEXT NOT NULL,
-                payload TEXT NOT NULL,
-                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-            )
-            """
-        )
+            _upgrade_postgres_schema(cursor)
     _INITIALIZED_DATABASE_URLS.add(database_url)
 
 
 def _upgrade_postgres_schema(cursor: psycopg.Cursor) -> None:
-    """Repair tables created by the original SQLite-to-Postgres text migration."""
+    """Keep the existing Railway PostgreSQL schema production-ready."""
     for table_name in POSTGRES_TABLES:
         sequence_name = f"{table_name}_id_seq"
         primary_key_name = f"{table_name}_pkey"
@@ -284,47 +202,29 @@ def _upgrade_postgres_schema(cursor: psycopg.Cursor) -> None:
 
 
 def save_news_items(database_url: str, items: Iterable[NewsItem]) -> tuple[int, int]:
+    validate_database_url(database_url)
     inserted = 0
     skipped = 0
 
-    if is_postgres(database_url):
-        with psycopg.connect(database_url) as connection:
-            with connection.cursor() as cursor:
-                for item in items:
-                    cursor.execute(
-                        """
-                        INSERT INTO news_items (
-                            title, source, url, published_at, region,
-                            summary, raw_text, collected_at
-                        )
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                        ON CONFLICT (url) DO NOTHING
-                        RETURNING id
-                        """,
-                        _news_item_values(item),
+    with psycopg.connect(database_url) as connection:
+        with connection.cursor() as cursor:
+            for item in items:
+                cursor.execute(
+                    """
+                    INSERT INTO news_items (
+                        title, source, url, published_at, region,
+                        summary, raw_text, collected_at
                     )
-                    if cursor.fetchone():
-                        inserted += 1
-                    else:
-                        skipped += 1
-        return inserted, skipped
-
-    with sqlite3.connect(database_path(database_url)) as connection:
-        for item in items:
-            cursor = connection.execute(
-                """
-                INSERT OR IGNORE INTO news_items (
-                    title, source, url, published_at, region,
-                    summary, raw_text, collected_at
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (url) DO NOTHING
+                    RETURNING id
+                    """,
+                    _news_item_values(item),
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                _news_item_values(item),
-            )
-            if cursor.rowcount:
-                inserted += 1
-            else:
-                skipped += 1
+                if cursor.fetchone():
+                    inserted += 1
+                else:
+                    skipped += 1
     return inserted, skipped
 
 
@@ -342,27 +242,17 @@ def _news_item_values(item: NewsItem) -> tuple[object, ...]:
 
 
 def record_audit_event(database_url: str, event_type: str, payload: str) -> None:
+    validate_database_url(database_url)
     created_at = datetime.now(timezone.utc)
-    if is_postgres(database_url):
-        with psycopg.connect(database_url) as connection:
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    """
-                    INSERT INTO audit_events (event_type, payload, created_at)
-                    VALUES (%s, %s, %s)
-                    """,
-                    (event_type, payload, created_at),
-                )
-        return
-
-    with sqlite3.connect(database_path(database_url)) as connection:
-        connection.execute(
-            """
-            INSERT INTO audit_events (event_type, payload, created_at)
-            VALUES (?, ?, ?)
-            """,
-            (event_type, payload, created_at.isoformat()),
-        )
+    with psycopg.connect(database_url) as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                INSERT INTO audit_events (event_type, payload, created_at)
+                VALUES (%s, %s, %s)
+                """,
+                (event_type, payload, created_at),
+            )
 
 
 def list_recent_news_items(database_url: str, limit: int = 10) -> list[dict[str, object]]:
@@ -457,35 +347,21 @@ def _replace_by_news_url(
     column_sql: str,
     values: tuple[object, ...],
 ) -> None:
+    validate_database_url(database_url)
     columns = [column.strip() for column in column_sql.split(",")]
     all_columns = ["news_url", *columns]
-
-    if is_postgres(database_url):
-        placeholders = ", ".join(["%s"] * len(values))
-        with psycopg.connect(database_url) as connection:
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    f"DELETE FROM {table_name} WHERE news_url = %s",
-                    (values[0],),
-                )
-                cursor.execute(
-                    f"INSERT INTO {table_name} ({', '.join(all_columns)}) "
-                    f"VALUES ({placeholders})",
-                    values,
-                )
-        return
-
-    placeholders = ", ".join(["?"] * len(values))
-    with sqlite3.connect(database_path(database_url)) as connection:
-        connection.execute(
-            f"DELETE FROM {table_name} WHERE news_url = ?",
-            (values[0],),
-        )
-        connection.execute(
-            f"INSERT INTO {table_name} ({', '.join(all_columns)}) "
-            f"VALUES ({placeholders})",
-            values,
-        )
+    placeholders = ", ".join(["%s"] * len(values))
+    with psycopg.connect(database_url) as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                f"DELETE FROM {table_name} WHERE news_url = %s",
+                (values[0],),
+            )
+            cursor.execute(
+                f"INSERT INTO {table_name} ({', '.join(all_columns)}) "
+                f"VALUES ({placeholders})",
+                values,
+            )
 
 
 def count_rows(database_url: str, table_name: str) -> int:
@@ -499,14 +375,11 @@ def count_rows(database_url: str, table_name: str) -> int:
     if table_name not in allowed_tables:
         raise ValueError(f"Unsupported table: {table_name}")
 
-    if is_postgres(database_url):
-        with psycopg.connect(database_url) as connection:
-            with connection.cursor() as cursor:
-                cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
-                row = cursor.fetchone()
-    else:
-        with sqlite3.connect(database_path(database_url)) as connection:
-            row = connection.execute(f"SELECT COUNT(*) FROM {table_name}").fetchone()
+    validate_database_url(database_url)
+    with psycopg.connect(database_url) as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+            row = cursor.fetchone()
     return int(row[0])
 
 
@@ -570,16 +443,12 @@ def _fetch_rows(
     database_url: str,
     query: str,
     params: tuple[object, ...],
-) -> list[dict[str, object] | sqlite3.Row]:
-    if is_postgres(database_url):
-        with psycopg.connect(database_url, row_factory=dict_row) as connection:
-            with connection.cursor() as cursor:
-                cursor.execute(query.format(placeholder="%s"), params)
-                return list(cursor.fetchall())
-
-    with sqlite3.connect(database_path(database_url)) as connection:
-        connection.row_factory = sqlite3.Row
-        return list(connection.execute(query.format(placeholder="?"), params).fetchall())
+) -> list[dict[str, object]]:
+    validate_database_url(database_url)
+    with psycopg.connect(database_url, row_factory=dict_row) as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(query.format(placeholder="%s"), params)
+            return list(cursor.fetchall())
 
 
 def _as_datetime(value: object) -> datetime | None:

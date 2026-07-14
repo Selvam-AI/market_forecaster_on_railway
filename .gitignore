@@ -1,6 +1,5 @@
-# Local environment and runtime files
+# Local secrets
 .env
-data/*.db
 ERROR_LOG.txt
 
 # Python
