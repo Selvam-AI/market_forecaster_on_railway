@@ -3,15 +3,15 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Geopolitical Market Forecaster</title>
-    <link rel="stylesheet" href="{{ url_for('static', path='dashboard.css').path }}?v=20260715-1">
+    <title>Singapore Equity Geopolitical Forecaster</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='dashboard.css').path }}?v=20260715-2">
   </head>
   <body>
     <main class="dashboard-shell">
       <header class="topbar">
         <div>
-          <p class="eyebrow">Geopolitical Market Forecaster v2.0</p>
-          <h1>See the market forces behind the share price.</h1>
+          <p class="eyebrow">Singapore Equity Geopolitical Forecaster</p>
+          <h1>Global events. Singapore-listed company implications.</h1>
           <p class="prototype-note">Educational Prototype Only. Always verify company fundamentals before trading.</p>
         </div>
         <div class="status-panel" aria-live="polite">
@@ -48,26 +48,32 @@
           tabindex="-1"
           data-tab-target="search"
         >
-          <span id="search-tab-label">Search new entity</span>
-          <small id="search-tab-detail">Yahoo Finance lookup</small>
+          <div class="search-tab-title">
+            <span id="search-tab-label">Search SGX entity</span>
+            <svg class="search-tab-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <circle cx="11" cy="11" r="6.5"></circle>
+              <path d="m16 16 4.25 4.25"></path>
+            </svg>
+          </div>
+          <small id="search-tab-detail">Singapore equities only</small>
         </button>
       </nav>
 
       <section class="search-popover" id="entity-search-popover" role="dialog" aria-labelledby="search-popover-title" hidden>
         <div class="search-popover-heading">
           <div>
-            <strong id="search-popover-title">Find a listed company</strong>
-            <span>Enter a company name or ticker, such as DBS or D05.SI.</span>
+            <strong id="search-popover-title">Find an SGX-listed company</strong>
+            <span>Enter a company name, SGX stock code, or .SI ticker.</span>
           </div>
           <button class="popover-close" id="close-entity-search" type="button" aria-label="Close entity search">×</button>
         </div>
         <form class="entity-search-form" id="entity-search-form" novalidate>
-          <label for="entity-search-input">Company or ticker</label>
+          <label for="entity-search-input">SGX company, stock code, or ticker</label>
           <div class="search-input-row">
             <input id="entity-search-input" name="q" type="search" minlength="2" maxlength="80" autocomplete="off" placeholder="e.g. DBS Group or D05.SI" required>
             <button id="entity-search-submit" type="submit">Search</button>
           </div>
-          <p class="search-feedback" id="entity-search-feedback" aria-live="polite">Data is retrieved from Yahoo Finance through yfinance.</p>
+          <p class="search-feedback" id="entity-search-feedback" aria-live="polite">Only Singapore-listed equities are returned.</p>
         </form>
       </section>
 
@@ -158,16 +164,16 @@
         <article class="entity-panel search-panel" id="panel-search" role="tabpanel" aria-labelledby="tab-search" data-panel="search" hidden>
           <div class="search-empty-state" id="entity-search-result">
             <span class="search-empty-icon" aria-hidden="true">⌕</span>
-            <p class="section-label">Search a new entity</p>
-            <h2>Look up another listed company</h2>
-            <p>Search by company name or ticker to see its latest available market snapshot and matching finance news.</p>
-            <button class="secondary-action" id="open-entity-search" type="button" data-open-entity-search>Open company search</button>
+            <p class="section-label">Search SGX equities</p>
+            <h2>Look up another Singapore-listed company</h2>
+            <p>Search by company name, SGX stock code, or .SI ticker to see its latest available market snapshot and matching finance news.</p>
+            <button class="secondary-action" id="open-entity-search" type="button" data-open-entity-search>Open SGX company search</button>
           </div>
-          <p class="panel-disclaimer">Search results may be delayed and do not represent an AI recommendation. Educational use only—not financial advice.</p>
+          <p class="panel-disclaimer">SGX search results may be delayed and do not represent an AI recommendation. Educational use only—not financial advice.</p>
         </article>
       </div>
     </main>
 
-    <script src="{{ url_for('static', path='dashboard.js').path }}?v=20260715-1"></script>
+    <script src="{{ url_for('static', path='dashboard.js').path }}?v=20260715-2"></script>
   </body>
 </html>

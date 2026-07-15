@@ -45,7 +45,8 @@ def search_market_entity(query: str) -> dict[str, Any]:
         entity = _select_equity(normalized_query, search.quotes)
         if entity is None:
             raise EntityNotFoundError(
-                f'No publicly listed company was found for "{normalized_query}".'
+                f'No SGX-listed equity was found for "{normalized_query}". '
+                "Try an SGX stock code such as S58 or a Yahoo symbol such as S58.SI."
             )
 
         result = _build_market_snapshot(normalized_query, entity, search.news)
@@ -67,26 +68,32 @@ def _select_equity(query: str, quotes: list[dict[str, Any]]) -> dict[str, Any] |
     equities = [
         item
         for item in quotes
-        if item.get("symbol") and str(item.get("quoteType", "")).upper() == "EQUITY"
+        if item.get("symbol")
+        and str(item.get("symbol", "")).upper().endswith(".SI")
+        and str(item.get("quoteType", "")).upper() == "EQUITY"
     ]
     if not equities:
         return None
 
     query_key = query.casefold()
+    query_stock_code = query_key.removesuffix(".si")
 
     def rank(item: dict[str, Any]) -> tuple[int, int]:
         symbol = str(item.get("symbol", "")).casefold()
+        stock_code = symbol.removesuffix(".si")
         names = [
             str(item.get(key, "")).casefold()
             for key in ("longname", "shortname", "name")
         ]
         if symbol == query_key:
             return (0, 0)
-        if query_key in names:
+        if stock_code == query_stock_code:
             return (1, 0)
+        if query_key in names:
+            return (2, 0)
         if any(name.startswith(query_key) for name in names if name):
-            return (2, len(symbol))
-        return (3, len(symbol))
+            return (3, len(symbol))
+        return (4, len(symbol))
 
     return min(equities, key=rank)
 
@@ -103,7 +110,7 @@ def _build_market_snapshot(
         or entity.get("name")
         or symbol
     )
-    exchange = entity.get("exchDisp") or entity.get("exchange") or "Unknown exchange"
+    exchange = entity.get("exchDisp") or "Singapore Exchange"
     currency = entity.get("currency")
     market_price = _number(entity.get("regularMarketPrice"))
     previous_close = _number(entity.get("regularMarketPreviousClose"))
@@ -126,7 +133,7 @@ def _build_market_snapshot(
         "symbol": symbol,
         "company_name": str(company_name),
         "exchange": str(exchange),
-        "quote_type": "Equity",
+        "quote_type": "SGX equity",
         "currency": str(currency or ""),
         "market_price": _format_price(market_price, currency),
         "day_change": _format_change(change_percent),
@@ -138,7 +145,7 @@ def _build_market_snapshot(
         "retrieved_at": datetime.now(timezone.utc).isoformat(),
         "disclaimer": (
             "Market data may be delayed. This search does not generate a geopolitical "
-            "wind direction or investment recommendation."
+            "wind direction or investment recommendation. SGX-listed equities only."
         ),
     }
 

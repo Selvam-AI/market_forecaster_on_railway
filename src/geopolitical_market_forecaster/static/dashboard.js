@@ -170,7 +170,7 @@ function renderSearchLoading(query) {
     <span class="search-empty-icon" aria-hidden="true">⌕</span>
     <p class="section-label">Searching Yahoo Finance</p>
     <h2>Looking for “${escapeHtml(query)}”</h2>
-    <p>Finding the listed company, latest available price, daily change, and matching finance news.</p>`;
+    <p>Finding the SGX-listed company, latest available price, daily change, and matching finance news.</p>`;
 }
 
 function renderSearchError(message) {
@@ -223,7 +223,7 @@ function renderSearchResult(entity) {
     <div class="context-grid">
       <section class="data-card explanation-card">
         <p class="section-label">How to read this result</p>
-        <p class="explanation-copy">This is a market-data lookup, not a completed geopolitical forecast. The company has not been assigned a tailwind, headwind, or AI logic score because it has not passed through the project’s company-specific analysis workflow.</p>
+        <p class="explanation-copy">This is an SGX market-data lookup, not a completed geopolitical forecast. The company has not been assigned a tailwind, headwind, or AI logic score because it has not passed through the project’s company-specific analysis workflow. Currency reflects the selected SGX counter’s trading currency, which is not always SGD.</p>
       </section>
       <section class="data-card news-card">
         <div class="news-heading"><p class="section-label">Matching Finance News</p><span>${entity.news?.length || 0} stories</span></div>
@@ -269,7 +269,7 @@ async function submitEntitySearch(event) {
 
     renderSearchResult(payload);
     if (searchTabLabelEl) searchTabLabelEl.textContent = `${payload.company_name} (${payload.symbol})`;
-    if (searchTabDetailEl) searchTabDetailEl.textContent = "Search result · click to change";
+    if (searchTabDetailEl) searchTabDetailEl.textContent = "SGX result · click to change";
     setSearchFeedback(`${payload.company_name} was found.`, "success");
     closeSearchPopover();
   } catch (error) {

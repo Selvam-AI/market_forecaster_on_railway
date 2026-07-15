@@ -53,6 +53,7 @@ def test_entity_search_returns_market_snapshot_and_news(monkeypatch):
     assert result["company_name"] == "DBS Group Holdings Ltd"
     assert result["market_price"] == "S$45.20"
     assert result["day_change"] == "+1.01%"
+    assert result["quote_type"] == "SGX equity"
     assert result["news"][0]["source"] == "Example News"
     assert result["source"] == "Yahoo Finance via yfinance"
 
@@ -82,26 +83,26 @@ def test_entity_search_prefers_exact_ticker_and_caches(monkeypatch):
     search_mock = MagicMock(return_value=fake_search)
     monkeypatch.setattr(market_data.yf, "Search", search_mock)
 
-    first = search_market_entity("D05.SI")
-    second = search_market_entity("  d05.si  ")
+    first = search_market_entity("D05")
+    second = search_market_entity("  d05  ")
 
     assert first["symbol"] == "D05.SI"
     assert second == first
     search_mock.assert_called_once()
 
 
-def test_entity_search_returns_not_found_for_non_equity(monkeypatch):
+def test_entity_search_rejects_non_sgx_equity(monkeypatch):
     monkeypatch.setattr(
         market_data.yf,
         "Search",
         lambda *args, **kwargs: SimpleNamespace(
-            quotes=[{"symbol": "ES=F", "quoteType": "FUTURE"}],
+            quotes=[{"symbol": "AAPL", "quoteType": "EQUITY"}],
             news=[],
         ),
     )
 
-    with pytest.raises(EntityNotFoundError, match="No publicly listed company"):
-        search_market_entity("not a company")
+    with pytest.raises(EntityNotFoundError, match="No SGX-listed equity"):
+        search_market_entity("Apple")
 
 
 def test_entity_search_hides_provider_failure(monkeypatch):
@@ -116,7 +117,7 @@ def test_entity_search_hides_provider_failure(monkeypatch):
 
 def test_entity_search_endpoint_maps_not_found_to_404(monkeypatch):
     def not_found(query):
-        raise EntityNotFoundError("No listed company found.")
+        raise EntityNotFoundError("No SGX-listed equity found.")
 
     monkeypatch.setattr(main, "search_market_entity", not_found)
 
@@ -124,7 +125,7 @@ def test_entity_search_endpoint_maps_not_found_to_404(monkeypatch):
         main.entity_search("missing company")
 
     assert error.value.status_code == 404
-    assert error.value.detail == "No listed company found."
+    assert error.value.detail == "No SGX-listed equity found."
 
 
 def test_entity_search_endpoint_maps_provider_failure_to_502(monkeypatch):

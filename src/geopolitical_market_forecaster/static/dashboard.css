@@ -165,7 +165,7 @@ h1 {
 
 .entity-tab[data-tab-target="offshore"] {
   --tab-accent: var(--green);
-  --tab-tint: rgba(36, 208, 160, 0.055);
+  --tab-tint: rgba(36, 208, 160, 0.1);
 }
 
 .entity-tab[data-tab-target="offshore"]:not(.active) {
@@ -174,7 +174,7 @@ h1 {
 
 .entity-tab[data-tab-target="airline"] {
   --tab-accent: var(--violet);
-  --tab-tint: rgba(180, 147, 255, 0.055);
+  --tab-tint: rgba(180, 147, 255, 0.1);
 }
 
 .entity-tab[data-tab-target="airline"]:not(.active) {
@@ -183,7 +183,19 @@ h1 {
 
 .entity-search-tab {
   --tab-accent: var(--amber);
-  --tab-tint: rgba(242, 189, 99, 0.055);
+  --tab-tint: rgba(242, 189, 99, 0.1);
+}
+
+.entity-tab[data-tab-target="offshore"].active {
+  background: linear-gradient(180deg, rgba(36, 208, 160, 0.17), var(--surface-raised));
+}
+
+.entity-tab[data-tab-target="airline"].active {
+  background: linear-gradient(180deg, rgba(180, 147, 255, 0.17), var(--surface-raised));
+}
+
+.entity-search-tab.active {
+  background: linear-gradient(180deg, rgba(242, 189, 99, 0.17), var(--surface-raised));
 }
 
 .entity-search-tab:not(.active) {
@@ -193,6 +205,22 @@ h1 {
 .entity-tab:not(.active) small {
   color: var(--tab-accent);
   opacity: 0.72;
+}
+
+.search-tab-title {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 22px;
+  align-items: center;
+  gap: 12px;
+}
+
+.search-tab-icon {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: var(--tab-accent);
+  stroke-linecap: round;
+  stroke-width: 1.8;
 }
 
 .entity-tab span,

@@ -1,6 +1,6 @@
-# Geopolitical Market Forecaster
+# Singapore Equity Geopolitical Forecaster
 
-A Railway-hosted FastAPI dashboard that turns geopolitical news into educational market signals for Seatrium and Singapore Airlines.
+A Railway-hosted FastAPI dashboard that translates global geopolitical events into understandable implications for Singapore-listed companies.
 
 Production dashboard:
 
@@ -14,13 +14,15 @@ Production dashboard:
 - Jinja2 renders the dashboard.
 - Railway PostgreSQL stores news, insights, forecasts, governance reviews, and audit events.
 - Guardian, NewsAPI, and RSS provide configurable news ingestion.
-- yfinance searches listed companies and retrieves market snapshots and finance news from Yahoo Finance without an API key.
+- yfinance searches SGX-listed equities and retrieves market snapshots and finance news from Yahoo Finance without an API key.
 - The analysis layer can use OpenAI or fall back to deterministic rules.
 - Railway injects configuration through service variables.
 
 This repository is PostgreSQL-only. SQLite, the local database, and the completed SQLite migration utility have been removed.
 
-The two fixed company tabs retain their demonstration price values. The **Search new entity** tab retrieves the latest available Yahoo Finance snapshot for the searched company. Yahoo Finance data may be delayed and is not an exchange-grade live feed.
+The two fixed company tabs retain their demonstration price values. The **Search SGX entity** tab retrieves the latest available Yahoo Finance snapshot for a Singapore-listed equity. It accepts a company name, an SGX stock code such as `S58`, or a Yahoo Finance symbol such as `S58.SI`. Non-SGX listings are rejected. Yahoo Finance data may be delayed and is not an exchange-grade live feed.
+
+Search results use the trading currency reported for the selected SGX counter. An SGX listing can therefore display USD or another currency rather than SGD.
 
 The yfinance integration scrapes Yahoo Finance's web endpoints; it is not a contracted Yahoo API integration and does not require an API key or credit card. Results are cached in the application process for five minutes to reduce repeated upstream requests.
 
@@ -88,7 +90,7 @@ Check the dashboard and static stylesheet:
 
 ```text
 https://YOUR-DOMAIN/dashboard
-https://YOUR-DOMAIN/static/dashboard.css?v=20260715-1
+https://YOUR-DOMAIN/static/dashboard.css?v=20260715-2
 ```
 
 The dashboard uses root-relative static paths so CSS and JavaScript remain HTTPS-safe behind Railway's proxy.
@@ -100,7 +102,7 @@ The dashboard uses root-relative static paths so CSS and JavaScript remain HTTPS
 | `GET` | `/health` | Railway health check |
 | `GET` | `/dashboard` | Rendered dashboard |
 | `GET` | `/api/dashboard` | Dashboard JSON snapshot |
-| `GET` | `/api/entities/search?q=...` | Search a listed company through yfinance |
+| `GET` | `/api/entities/search?q=...` | Search an SGX-listed equity through yfinance |
 | `POST` | `/api/ingest/run` | Trigger news ingestion and analysis |
 | `POST` | `/pipeline/run` | Run the forecast pipeline |
 | `WS` | `/ws/alerts` | Realtime dashboard alerts |
