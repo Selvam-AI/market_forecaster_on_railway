@@ -52,12 +52,16 @@ def test_dashboard_template_and_styles_exist():
     assert 'id="entity-search-popover"' in template_text
     assert 'id="entity-search-result"' in template_text
     assert 'class="search-tab-icon"' in template_text
-    assert "Singapore Equity Geopolitical Forecaster" in template_text
+    assert "SGX Geopolitical Forecaster" in template_text
+    assert "Singapore Equity Geopolitical Forecaster" not in template_text
     assert "Search SGX entity" in template_text
     assert "v2.0" not in template_text
     assert "url_for('static', path='dashboard.css').path" in template_text
     assert "url_for('static', path='dashboard.js').path" in template_text
     assert ".entity-tabs" in (package_dir / "static" / "dashboard.css").read_text()
+    assert ".entity-search-tab.search-result-ready #search-tab-detail" in (
+        package_dir / "static" / "dashboard.css"
+    ).read_text()
     assert ".wind-badge" in (
         package_dir / "static" / "dashboard.css"
     ).read_text()

@@ -53,7 +53,7 @@ async def lifespan(app: FastAPI):
             pass
 
 
-app = FastAPI(title="Singapore Equity Geopolitical Forecaster", lifespan=lifespan)
+app = FastAPI(title="SGX Geopolitical Forecaster", lifespan=lifespan)
 PACKAGE_DIR = Path(__file__).resolve().parent
 TEMPLATE_DIR = PACKAGE_DIR / "templates"
 STATIC_DIR = PACKAGE_DIR / "static"

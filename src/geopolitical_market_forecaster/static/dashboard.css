@@ -137,6 +137,7 @@ h1 {
 }
 
 .entity-tab span {
+  color: var(--ink);
   font-size: 16px;
   font-weight: 800;
   text-transform: uppercase;
@@ -205,6 +206,14 @@ h1 {
 .entity-tab:not(.active) small {
   color: var(--tab-accent);
   opacity: 0.72;
+}
+
+.entity-search-tab.search-result-ready #search-tab-detail {
+  color: var(--amber);
+  font-size: 15px;
+  font-weight: 850;
+  letter-spacing: 0.01em;
+  opacity: 1;
 }
 
 .search-tab-title {

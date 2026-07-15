@@ -75,7 +75,7 @@ def show_status() -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Singapore Equity Geopolitical Forecaster CLI"
+        description="SGX Geopolitical Forecaster CLI"
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
     pipeline_parser = subparsers.add_parser(

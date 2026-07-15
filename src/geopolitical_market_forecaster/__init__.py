@@ -1,4 +1,4 @@
-"""Singapore Equity Geopolitical Forecaster package."""
+"""SGX Geopolitical Forecaster package."""
 
 __all__ = ["__version__"]
 

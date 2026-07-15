@@ -270,6 +270,7 @@ async function submitEntitySearch(event) {
     renderSearchResult(payload);
     if (searchTabLabelEl) searchTabLabelEl.textContent = `${payload.company_name} (${payload.symbol})`;
     if (searchTabDetailEl) searchTabDetailEl.textContent = "SGX result · click to change";
+    searchTabEl?.classList.add("search-result-ready");
     setSearchFeedback(`${payload.company_name} was found.`, "success");
     closeSearchPopover();
   } catch (error) {

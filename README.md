@@ -1,4 +1,4 @@
-# Singapore Equity Geopolitical Forecaster
+# SGX Geopolitical Forecaster
 
 A Railway-hosted FastAPI dashboard that translates global geopolitical events into understandable implications for Singapore-listed companies.
 
@@ -90,7 +90,7 @@ Check the dashboard and static stylesheet:
 
 ```text
 https://YOUR-DOMAIN/dashboard
-https://YOUR-DOMAIN/static/dashboard.css?v=20260715-2
+https://YOUR-DOMAIN/static/dashboard.css?v=20260715-3
 ```
 
 The dashboard uses root-relative static paths so CSS and JavaScript remain HTTPS-safe behind Railway's proxy.
