@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Geopolitical Market Forecaster</title>
-    <link rel="stylesheet" href="{{ url_for('static', path='dashboard.css').path }}?v=20260714-2">
+    <link rel="stylesheet" href="{{ url_for('static', path='dashboard.css').path }}?v=20260715-1">
   </head>
   <body>
     <main class="dashboard-shell">
@@ -36,9 +36,43 @@
           <small>{{ decision.sector_label }}</small>
         </button>
         {% endfor %}
+        <button
+          class="entity-tab entity-search-tab"
+          id="tab-search"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          aria-controls="panel-search"
+          aria-haspopup="dialog"
+          aria-expanded="false"
+          tabindex="-1"
+          data-tab-target="search"
+        >
+          <span id="search-tab-label">Search new entity</span>
+          <small id="search-tab-detail">Yahoo Finance lookup</small>
+        </button>
       </nav>
 
+      <section class="search-popover" id="entity-search-popover" role="dialog" aria-labelledby="search-popover-title" hidden>
+        <div class="search-popover-heading">
+          <div>
+            <strong id="search-popover-title">Find a listed company</strong>
+            <span>Enter a company name or ticker, such as DBS or D05.SI.</span>
+          </div>
+          <button class="popover-close" id="close-entity-search" type="button" aria-label="Close entity search">×</button>
+        </div>
+        <form class="entity-search-form" id="entity-search-form" novalidate>
+          <label for="entity-search-input">Company or ticker</label>
+          <div class="search-input-row">
+            <input id="entity-search-input" name="q" type="search" minlength="2" maxlength="80" autocomplete="off" placeholder="e.g. DBS Group or D05.SI" required>
+            <button id="entity-search-submit" type="submit">Search</button>
+          </div>
+          <p class="search-feedback" id="entity-search-feedback" aria-live="polite">Data is retrieved from Yahoo Finance through yfinance.</p>
+        </form>
+      </section>
+
       <div id="decision-board">
+        <div id="sector-panels">
         {% for decision in sector_decisions %}
         <article
           class="entity-panel{% if loop.first %} active{% endif %}"
@@ -119,9 +153,21 @@
           <p class="panel-disclaimer">{{ decision.disclaimer }} Educational signal only—not financial advice.</p>
         </article>
         {% endfor %}
+        </div>
+
+        <article class="entity-panel search-panel" id="panel-search" role="tabpanel" aria-labelledby="tab-search" data-panel="search" hidden>
+          <div class="search-empty-state" id="entity-search-result">
+            <span class="search-empty-icon" aria-hidden="true">⌕</span>
+            <p class="section-label">Search a new entity</p>
+            <h2>Look up another listed company</h2>
+            <p>Search by company name or ticker to see its latest available market snapshot and matching finance news.</p>
+            <button class="secondary-action" id="open-entity-search" type="button" data-open-entity-search>Open company search</button>
+          </div>
+          <p class="panel-disclaimer">Search results may be delayed and do not represent an AI recommendation. Educational use only—not financial advice.</p>
+        </article>
       </div>
     </main>
 
-    <script src="{{ url_for('static', path='dashboard.js').path }}?v=20260714-2"></script>
+    <script src="{{ url_for('static', path='dashboard.js').path }}?v=20260715-1"></script>
   </body>
 </html>

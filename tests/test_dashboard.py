@@ -48,6 +48,9 @@ def test_dashboard_template_and_styles_exist():
     assert "Historical Performance & Learning" not in template_text
     assert "System Governance" not in template_text
     assert "Live Global News Feed" in template_text
+    assert 'id="tab-search"' in template_text
+    assert 'id="entity-search-popover"' in template_text
+    assert 'id="entity-search-result"' in template_text
     assert "url_for('static', path='dashboard.css').path" in template_text
     assert "url_for('static', path='dashboard.js').path" in template_text
     assert ".entity-tabs" in (package_dir / "static" / "dashboard.css").read_text()

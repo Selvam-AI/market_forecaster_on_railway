@@ -2,7 +2,7 @@ from pathlib import Path
 import asyncio
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -10,6 +10,11 @@ from fastapi.templating import Jinja2Templates
 from geopolitical_market_forecaster.config import get_settings
 from geopolitical_market_forecaster.decisions import build_sector_decisions
 from geopolitical_market_forecaster.ingestion import NewsIngestionService
+from geopolitical_market_forecaster.market_data import (
+    EntityNotFoundError,
+    MarketDataUnavailableError,
+    search_market_entity,
+)
 from geopolitical_market_forecaster.orchestration.pipeline import ForecastPipeline
 from geopolitical_market_forecaster.realtime import (
     ConnectionManager,
@@ -104,6 +109,18 @@ async def dashboard_data() -> dict:
     payload = dashboard_payload(settings, "snapshot")
     payload["analysis_provider"] = settings.resolved_analysis_provider()
     return payload
+
+
+@app.get("/api/entities/search")
+def entity_search(
+    q: str = Query(min_length=2, max_length=80),
+) -> dict:
+    try:
+        return search_market_entity(q)
+    except EntityNotFoundError as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+    except MarketDataUnavailableError as error:
+        raise HTTPException(status_code=502, detail=str(error)) from error
 
 
 @app.post("/api/ingest/run")

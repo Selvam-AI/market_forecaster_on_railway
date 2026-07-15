@@ -14,12 +14,15 @@ Production dashboard:
 - Jinja2 renders the dashboard.
 - Railway PostgreSQL stores news, insights, forecasts, governance reviews, and audit events.
 - Guardian, NewsAPI, and RSS provide configurable news ingestion.
+- yfinance searches listed companies and retrieves market snapshots and finance news from Yahoo Finance without an API key.
 - The analysis layer can use OpenAI or fall back to deterministic rules.
 - Railway injects configuration through service variables.
 
 This repository is PostgreSQL-only. SQLite, the local database, and the completed SQLite migration utility have been removed.
 
-The displayed company price values are currently demonstration values. They are not a live exchange feed.
+The two fixed company tabs retain their demonstration price values. The **Search new entity** tab retrieves the latest available Yahoo Finance snapshot for the searched company. Yahoo Finance data may be delayed and is not an exchange-grade live feed.
+
+The yfinance integration scrapes Yahoo Finance's web endpoints; it is not a contracted Yahoo API integration and does not require an API key or credit card. Results are cached in the application process for five minutes to reduce repeated upstream requests.
 
 ## Deploy to Railway
 
@@ -85,7 +88,7 @@ Check the dashboard and static stylesheet:
 
 ```text
 https://YOUR-DOMAIN/dashboard
-https://YOUR-DOMAIN/static/dashboard.css?v=20260714-2
+https://YOUR-DOMAIN/static/dashboard.css?v=20260715-1
 ```
 
 The dashboard uses root-relative static paths so CSS and JavaScript remain HTTPS-safe behind Railway's proxy.
@@ -97,6 +100,7 @@ The dashboard uses root-relative static paths so CSS and JavaScript remain HTTPS
 | `GET` | `/health` | Railway health check |
 | `GET` | `/dashboard` | Rendered dashboard |
 | `GET` | `/api/dashboard` | Dashboard JSON snapshot |
+| `GET` | `/api/entities/search?q=...` | Search a listed company through yfinance |
 | `POST` | `/api/ingest/run` | Trigger news ingestion and analysis |
 | `POST` | `/pipeline/run` | Run the forecast pipeline |
 | `WS` | `/ws/alerts` | Realtime dashboard alerts |
@@ -120,6 +124,8 @@ pytest -q
 
 Tests mock PostgreSQL connections; they do not require or modify the Railway production database.
 
+Entity-search tests also mock yfinance, so routine tests do not scrape Yahoo Finance.
+
 ## Repository Layout
 
 ```text
@@ -131,6 +137,7 @@ Tests mock PostgreSQL connections; they do not require or modify the Railway pro
 │   ├── templates/
 │   ├── config.py
 │   ├── main.py
+│   ├── market_data.py
 │   └── storage.py
 ├── tests/
 ├── .env.example

@@ -11,6 +11,8 @@
   --cyan-soft: rgba(68, 194, 255, 0.12);
   --green: #24d0a0;
   --red: #ff5c6c;
+  --violet: #b493ff;
+  --amber: #f2bd63;
   --track: #2a3a49;
   --shadow: 0 18px 50px rgba(0, 0, 0, 0.2);
 }
@@ -113,19 +115,21 @@ h1 {
 
 .entity-tabs {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   padding: 16px 24px 0;
 }
 
 .entity-tab {
+  --tab-accent: var(--cyan);
+  --tab-tint: rgba(68, 194, 255, 0.06);
   display: grid;
   gap: 2px;
   padding: 15px 20px 13px;
   border: 1px solid transparent;
   border-bottom: 3px solid transparent;
   border-radius: 10px 10px 0 0;
-  background: rgba(29, 42, 54, 0.42);
+  background: var(--tab-tint);
   color: #718294;
   cursor: pointer;
   text-align: left;
@@ -154,9 +158,166 @@ h1 {
 
 .entity-tab.active {
   border-color: var(--line);
-  border-bottom-color: var(--cyan);
+  border-bottom-color: var(--tab-accent);
   background: var(--surface-raised);
-  color: var(--cyan);
+  color: var(--tab-accent);
+}
+
+.entity-tab[data-tab-target="offshore"] {
+  --tab-accent: var(--green);
+  --tab-tint: rgba(36, 208, 160, 0.055);
+}
+
+.entity-tab[data-tab-target="offshore"]:not(.active) {
+  border-top-color: rgba(36, 208, 160, 0.2);
+}
+
+.entity-tab[data-tab-target="airline"] {
+  --tab-accent: var(--violet);
+  --tab-tint: rgba(180, 147, 255, 0.055);
+}
+
+.entity-tab[data-tab-target="airline"]:not(.active) {
+  border-top-color: rgba(180, 147, 255, 0.2);
+}
+
+.entity-search-tab {
+  --tab-accent: var(--amber);
+  --tab-tint: rgba(242, 189, 99, 0.055);
+}
+
+.entity-search-tab:not(.active) {
+  border-top-color: rgba(242, 189, 99, 0.2);
+}
+
+.entity-tab:not(.active) small {
+  color: var(--tab-accent);
+  opacity: 0.72;
+}
+
+.entity-tab span,
+.entity-tab small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search-popover {
+  position: relative;
+  z-index: 4;
+  width: min(460px, calc(100% - 48px));
+  margin: 10px 24px -2px auto;
+  padding: 20px;
+  border: 1px solid rgba(242, 189, 99, 0.42);
+  border-radius: 12px;
+  background: #202d39;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.34);
+}
+
+.search-popover[hidden] {
+  display: none;
+}
+
+.search-popover-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.search-popover-heading div {
+  display: grid;
+  gap: 3px;
+}
+
+.search-popover-heading strong {
+  color: var(--amber);
+  font-size: 16px;
+}
+
+.search-popover-heading span,
+.search-feedback {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.popover-close {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.popover-close:hover {
+  background: rgba(255, 255, 255, 0.11);
+  color: var(--ink);
+}
+
+.entity-search-form {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.entity-search-form label {
+  color: #d8e1e9;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.search-input-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.search-input-row input {
+  min-width: 0;
+  padding: 11px 12px;
+  border: 1px solid #4a5d70;
+  border-radius: 8px;
+  outline: 0;
+  background: #131e28;
+  color: var(--ink);
+}
+
+.search-input-row input:focus {
+  border-color: var(--amber);
+  box-shadow: 0 0 0 3px rgba(242, 189, 99, 0.14);
+}
+
+.search-input-row button,
+.secondary-action {
+  padding: 10px 16px;
+  border: 1px solid rgba(242, 189, 99, 0.5);
+  border-radius: 8px;
+  background: rgba(242, 189, 99, 0.14);
+  color: #ffdda1;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.search-input-row button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.search-feedback {
+  min-height: 18px;
+  margin: 0;
+}
+
+.search-feedback.error {
+  color: #ff9aa5;
+}
+
+.search-feedback.success {
+  color: #72dfbf;
 }
 
 .entity-panel {
@@ -167,6 +328,116 @@ h1 {
 
 .entity-panel[hidden] {
   display: none;
+}
+
+.search-empty-state {
+  display: grid;
+  justify-items: center;
+  min-height: 490px;
+  align-content: center;
+  padding: 48px 24px;
+  border: 1px dashed rgba(242, 189, 99, 0.34);
+  border-radius: 12px;
+  background: rgba(26, 37, 47, 0.72);
+  text-align: center;
+}
+
+.search-empty-state .section-label {
+  margin-bottom: 4px;
+  color: var(--amber);
+}
+
+.search-empty-state h2 {
+  margin: 4px 0 8px;
+  font-size: 25px;
+}
+
+.search-empty-state > p:not(.section-label) {
+  max-width: 590px;
+  margin-bottom: 20px;
+  color: var(--muted);
+}
+
+.search-empty-icon {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  margin-bottom: 12px;
+  place-items: center;
+  border: 1px solid rgba(242, 189, 99, 0.38);
+  border-radius: 50%;
+  background: rgba(242, 189, 99, 0.09);
+  color: var(--amber);
+  font-size: 32px;
+}
+
+.search-result-summary {
+  display: grid;
+  gap: 12px;
+}
+
+.search-result-summary .secondary-action {
+  width: fit-content;
+  margin-top: 4px;
+}
+
+.search-result-view {
+  display: grid;
+  gap: 16px;
+}
+
+.entity-found-badge {
+  display: inline-flex;
+  width: fit-content;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(242, 189, 99, 0.1);
+  color: var(--amber);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.search-company-name {
+  margin: 0;
+  font-size: clamp(25px, 3vw, 38px);
+  line-height: 1.12;
+}
+
+.search-company-meta {
+  color: var(--muted);
+}
+
+.search-source-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(26, 37, 47, 0.7);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.search-source-row a {
+  color: var(--amber);
+  text-decoration: none;
+}
+
+.search-source-row a:hover {
+  text-decoration: underline;
+}
+
+.search-loading {
+  animation: search-pulse 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes search-pulse {
+  from { opacity: 0.48; }
+  to { opacity: 1; }
 }
 
 .hero-grid,
@@ -267,6 +538,10 @@ h1 {
 
 .day-change.negative {
   color: var(--red);
+}
+
+.day-change.neutral {
+  color: var(--muted);
 }
 
 .ticker-details {
@@ -506,6 +781,15 @@ h1 {
 
   .entity-tab {
     border-radius: 9px;
+  }
+
+  .search-popover {
+    width: calc(100% - 28px);
+    margin: 10px 14px 0;
+  }
+
+  .search-input-row {
+    grid-template-columns: 1fr;
   }
 
   .entity-panel {
